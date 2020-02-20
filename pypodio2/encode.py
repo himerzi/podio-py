@@ -5,11 +5,16 @@ as multipart/form-data suitable for a HTTP POST or PUT request.
 
 multipart/form-data is the standard way to upload files over HTTP"""
 
+from past.builtins import cmp
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import str
+from builtins import object
 import mimetypes
 import os
 import re
-import urllib
-import urllib.parse
+import urllib.request, urllib.parse, urllib.error
 from email.header import Header
 
 __all__ = ['gen_boundary', 'encode_and_quote', 'MultipartParam',
@@ -55,7 +60,7 @@ def _strify(s):
     otherwise return str(s), or None if s is None"""
     if s is None:
         return None
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         return s.encode("utf-8")
     return str(s)
 
@@ -105,8 +110,8 @@ class MultipartParam(object):
                 self.filename = filename.encode("ascii", "xmlcharrefreplace")
             else:
                 self.filename = str(filename)
-            #self.filename = self.filename.encode("string_escape"). \
-            #    replace('"', '\\"')
+            self.filename = self.filename.encode("string_escape"). \
+                replace('"', '\\"')
         self.filetype = _strify(filetype)
 
         self.filesize = filesize
@@ -167,7 +172,7 @@ class MultipartParam(object):
         MultipartParam object names must match the given names in the
         name,value pairs or mapping, if applicable."""
         if hasattr(params, 'items'):
-            params = params.items()
+            params = list(params.items())
 
         retval = []
         for item in params:
@@ -330,7 +335,7 @@ def get_headers(params, boundary):
     return headers
 
 
-class MultipartYielder:
+class MultipartYielder(object):
     def __init__(self, params, boundary, cb):
         self.params = params
         self.boundary = boundary
@@ -345,12 +350,12 @@ class MultipartYielder:
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         """generator function to yield multipart/form-data representation
         of parameters"""
         if self.param_iter is not None:
             try:
-                block = self.param_iter.next()
+                block = next(self.param_iter)
                 self.current += len(block)
                 if self.cb:
                     self.cb(self.p, self.current, self.total)
@@ -374,7 +379,7 @@ class MultipartYielder:
         self.p = self.params[self.i]
         self.param_iter = self.p.iter_encode(self.boundary)
         self.i += 1
-        return self.next()
+        return next(self)
 
     def reset(self):
         self.i = 0
@@ -426,7 +431,7 @@ def multipart_encode(params, boundary=None, cb=None):
     if boundary is None:
         boundary = gen_boundary()
     else:
-        boundary = urllib.quote_plus(boundary)
+        boundary = urllib.parse.quote_plus(boundary)
 
     headers = get_headers(params, boundary)
     params = MultipartParam.from_params(params)
