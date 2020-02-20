@@ -110,8 +110,8 @@ class MultipartParam(object):
                 self.filename = filename.encode("ascii", "xmlcharrefreplace")
             else:
                 self.filename = str(filename)
-            self.filename = self.filename.encode("string_escape"). \
-                replace('"', '\\"')
+#             self.filename = self.filename.encode("string_escape"). \
+#                 replace('"', '\\"')
         self.filetype = _strify(filetype)
 
         self.filesize = filesize
