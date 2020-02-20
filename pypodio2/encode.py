@@ -45,9 +45,9 @@ def encode_and_quote(data):
     if data is None:
         return None
 
-    if isinstance(data, unicode):
+    if isinstance(data, str):
         data = data.encode("utf-8")
-    return urllib.quote_plus(data)
+    return urllib.parse.quote_plus(data)
 
 
 def _strify(s):
